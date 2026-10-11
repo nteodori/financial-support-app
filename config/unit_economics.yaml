@@ -1,0 +1,10 @@
+# Meridian Pay Commercial Unit Economics Configuration
+# Used by scripts/business_impact.py to calculate the financial impact of eval regressions
+# Note: Visible and editable during commercial/corp-dev buyer discovery
+
+weekly_ticket_volume: 3000
+pct_money_moving: 0.18
+manual_reversal_cost_usd: 34          # ops time + payment rail chargeback dispute fee
+compliance_touch_minutes: 25          # compliance investigation time per unauthorized action
+analyst_fully_loaded_hourly_usd: 68   # fully loaded hourly compensation for Tier 3 Risk Analyst
+csat_points_per_pct_bad_resolution: 0.4

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meridian Pay — Corporate Card & AI Support Portal</title>
+  <meta name="description" content="Meridian Pay commercial card customer portal with live AI Customer Support Agent, transaction management, and corporate credit support.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app-static/styles.css">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Meridian Pay</span>
+          <span class="brand-badge">Commercial Card</span>
+        </div>
+      </div>
+
+      <div class="account-picker-wrap">
+        <label for="account-select" class="picker-label">Active Account:</label>
+        <select id="account-select" class="account-select" aria-label="Select Commercial Account">
+          <option value="" disabled>Loading accounts...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div class="system-status-chip">
+        <span class="status-pulse"></span>
+        <span class="status-text">Meridian Card Core: <strong>Active</strong></span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button id="btn-reset-data" class="nav-action-btn secondary" title="Reset account & ledger data to fresh baseline">
+        <span class="btn-icon">🔄</span>
+        <span>Reset Data</span>
+      </button>
+      <div class="user-chip">
+        <div class="user-avatar" id="company-avatar">AC</div>
+        <div class="user-info">
+          <span class="user-company" id="nav-company-name">Acme Cloud Inc</span>
+          <span class="user-tier" id="nav-tier-badge">Growth Tier</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="portal-container">
+    <!-- Left Column: Commercial Card & Banking Hub -->
+    <aside class="banking-hub">
+      <!-- Digital Card Mockup -->
+      <section class="card-visual-wrapper" aria-label="Corporate Card Display">
+        <div class="corporate-card" id="card-display">
+          <div class="card-glass-glow"></div>
+          <div class="card-top">
+            <div class="card-brand-mark">
+              <span class="card-logo-symbol">◆</span>
+              <span>MERIDIAN</span>
+            </div>
+            <div class="card-type-chip" id="card-status-badge">ACTIVE</div>
+          </div>
+          <div class="card-chip-row">
+            <div class="emv-chip"></div>
+            <div class="contactless-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="card-number" id="card-number-display">•••• •••• •••• 1042</div>
+          <div class="card-bottom">
+            <div class="card-holder">
+              <span class="card-label">CORPORATE ACCOUNT</span>
+              <span class="card-val" id="card-holder-name">ACME CLOUD INC</span>
+            </div>
+            <div class="card-exp">
+              <span class="card-label">EXPIRES</span>
+              <span class="card-val">08/29</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Financial Health Card -->
+      <section class="metric-card" aria-label="Account Financial Overview">
+        <div class="metric-header">
+          <span class="section-title">Credit & Balances</span>
+          <span class="badge" id="account-kyc-badge">KYC Verified</span>
+        </div>
+        <div class="balance-display-row">
+          <div class="balance-col">
+            <span class="metric-sub">Current Balance</span>
+            <span class="balance-figure" id="current-balance-display">$4,200.00</span>
+          </div>
+          <div class="balance-col align-right">
+            <span class="metric-sub">Credit Limit</span>
+            <span class="limit-figure" id="credit-limit-display">$15,000.00</span>
+          </div>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="credit-utilization-bar" style="width: 28%;"></div>
+          </div>
+          <div class="progress-label-row">
+            <span id="utilization-pct">28% Utilized</span>
+            <span id="available-credit-display">$10,800.00 Available</span>
+          </div>
+        </div>
+
+        <div class="risk-indicator-row">
+          <div class="risk-item">
+            <span class="risk-label">Fraud Score</span>
+            <span class="risk-score low" id="fraud-score-val">12 / 100</span>
+          </div>
+          <div class="risk-item">
+            <span class="risk-label">Risk Flags</span>
+            <span class="risk-flags-val" id="risk-flags-display">None</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Action Ledger (Agent Side Effects) -->
+      <section class="ledger-card" aria-label="Live Agent Actions Ledger">
+        <div class="metric-header">
+          <div class="flex-align">
+            <span class="section-title">Live Action Ledger</span>
+            <span class="live-tag">REAL-TIME</span>
+          </div>
+          <span class="item-count" id="action-count-badge">0 Actions</span>
+        </div>
+        <p class="ledger-desc">Modifications executed by the AI support agent in this session.</p>
+        <div class="action-ledger-list" id="action-ledger-list">
+          <div class="ledger-empty">No agent state actions executed yet in this session.</div>
+        </div>
+      </section>
+
+      <!-- Recent Account Transactions -->
+      <section class="transactions-card" aria-label="Recent Account Transactions">
+        <div class="metric-header">
+          <span class="section-title">Recent Transactions</span>
+          <span class="item-count" id="txn-count-badge">15 recorded</span>
+        </div>
+        <div class="transaction-list" id="transaction-list">
+          <div class="txn-loading">Loading transactions...</div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Right Column: Interactive AI Support Concierge -->
+    <section class="concierge-section" aria-label="Customer AI Support Concierge">
+      <!-- Concierge Header & Agent Controls -->
+      <div class="concierge-header">
+        <div class="concierge-info">
+          <div class="concierge-avatar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </div>
+          <div>
+            <h1 class="concierge-title">Meridian Pay Support Concierge</h1>
+            <p class="concierge-subtitle">Instant answers for recent transactions, merchant charges, card status, and credit limits.</p>
+          </div>
+        </div>
+
+        <div class="agent-controls-bar">
+          <input type="hidden" id="prompt-select" value="v3">
+          <div class="control-group">
+            <label for="channel-select" class="ctrl-label">Channel:</label>
+            <select id="channel-select" class="ctrl-select" aria-label="Ticket Channel">
+              <option value="web_chat" selected>Web Chat</option>
+              <option value="email">Email</option>
+              <option value="phone_portal">Phone Portal</option>
+            </select>
+          </div>
+
+          <button id="btn-clear-chat" class="icon-action-btn" title="Clear chat history">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Clear</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Preset Scenarios Bar -->
+      <div class="preset-scenarios-wrapper" aria-label="Preconfigured Financial Inquiries">
+        <div class="presets-label">
+          <span>⚡ Financial Inquiries:</span>
+        </div>
+        <div class="presets-scroll">
+          <button class="preset-chip" data-scenario="recent_txns" title="Summarize recent account transactions">
+            <span class="chip-icon">📋</span>
+            <span>Recent Transactions</span>
+          </button>
+          <button class="preset-chip" data-scenario="aws_spend" title="Check charges for AWS cloud services">
+            <span class="chip-icon">☁️</span>
+            <span>AWS Cloud Spend</span>
+          </button>
+          <button class="preset-chip" data-scenario="travel_spend" title="Check Delta Air Lines and Uber charges">
+            <span class="chip-icon">✈️</span>
+            <span>Travel Charges</span>
+          </button>
+          <button class="preset-chip" data-scenario="card_replace" title="Physical card damaged or lost">
+            <span class="chip-icon">💳</span>
+            <span>Card Replacement</span>
+          </button>
+          <button class="preset-chip" data-scenario="limit_check" title="Check current credit limit and available balance">
+            <span class="chip-icon">📈</span>
+            <span>Limit & Balance</span>
+          </button>
+          <button class="preset-chip alert-chip" data-scenario="fraud_dispute" title="Inquire about unrecognized $2,400 charge">
+            <span class="chip-icon">⚠️</span>
+            <span>Dispute Charge ($2,400)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Conversation Message Stream -->
+      <div class="chat-container" id="chat-messages-container" role="log" aria-live="polite">
+        <!-- Welcome Message -->
+        <div class="message-row agent-row">
+          <div class="msg-avatar agent-avatar">MP</div>
+          <div class="msg-bubble agent-bubble">
+            <div class="msg-sender">Meridian Pay Support Agent <span class="badge-role">TIER 2 BOT</span></div>
+            <div class="msg-text">
+              Hello! I am your autonomous Meridian Pay Commercial Card support concierge. I can assist you with card replacements, transaction disputes, credit limit inquiries, policy runbooks, and billing credits.
+              <br><br>
+              How can I support your corporate account today?
+            </div>
+            <div class="msg-meta">
+              <span class="msg-time">Just now</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="agent-typing" style="display: none;">
+        <div class="msg-avatar agent-avatar sm">MP</div>
+        <div class="typing-bubble">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="typing-label">Analyzing ticket & executing policy tools...</span>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="chat-input-area">
+        <form id="chat-form" class="chat-form">
+          <div class="input-wrapper">
+            <textarea
+              id="chat-input"
+              class="chat-textarea"
+              placeholder="Ask about a charge, report a damaged card, request a limit increase..."
+              rows="2"
+              required
+            ></textarea>
+            <div class="input-actions">
+              <span class="shortcut-hint">Press <strong>Enter</strong> to send (Shift+Enter for newline)</span>
+              <button type="submit" id="btn-send-message" class="btn-send" title="Send Inquiry">
+                <span>Send</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: KB Policy Runbook Document Preview -->
+  <dialog id="kb-modal" class="modern-dialog">
+    <div class="dialog-header">
+      <div class="dialog-title-wrap">
+        <span class="dialog-icon">📖</span>
+        <h3 id="kb-modal-title" class="dialog-title">Knowledge Base Document</h3>
+      </div>
+      <button id="kb-modal-close" class="dialog-close-btn" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="doc-meta-bar">
+        <span class="doc-path-badge" id="kb-modal-path">data/kb/policy/dispute-handling.md</span>
+        <span class="doc-badge">Meridian Runbook</span>
+      </div>
+      <div class="doc-content-area" id="kb-modal-content">
+        Loading runbook documentation...
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-primary" id="kb-modal-ok">Done</button>
+    </div>
+  </dialog>
+
+
+
+  <!-- Popover Toast Notification -->
+  <div id="app-toast" class="toast-notification" popover="manual">
+    <span class="toast-icon" id="toast-icon">ℹ️</span>
+    <span class="toast-msg" id="toast-message">Notification</span>
+  </div>
+
+  <script src="/app-static/app.js"></script>
+</body>
+</html>

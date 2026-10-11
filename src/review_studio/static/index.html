@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Braintrust Trace Review Studio — Meridian Pay Support</title>
+  <meta name="description" content="Local browser trace review studio connected to Braintrust for evaluating LLM multi-turn decisions, system evals, and syncing human commentary.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- App Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <div class="brand-icon">⚡</div>
+        <span>Trace Review Studio</span>
+      </div>
+      <div class="project-chip" title="Connected Braintrust Project">
+        <span class="dot"></span>
+        <span id="project-name-display">meridian-pay-support</span>
+      </div>
+    </div>
+
+    <div class="header-stats" id="header-stats-bar">
+      <div class="stat-pill pill-active" id="stat-assigned-btn" title="Filter to traces assigned to you">
+        <span>Assigned to Me:</span>
+        <strong id="stat-assigned-count">-</strong>
+      </div>
+      <div class="stat-pill" id="stat-unassigned-btn" title="Filter to unassigned queue">
+        <span>Unassigned Queue:</span>
+        <strong id="stat-unassigned-count">-</strong>
+      </div>
+      <div class="stat-pill pill-failing" id="stat-failing-btn" title="Filter to traces failing automated evaluations">
+        <span>Failing Evals:</span>
+        <strong id="stat-failing-count">-</strong>
+      </div>
+      <div class="stat-pill" id="stat-needs-review-btn" title="Filter to traces awaiting human review">
+        <span>Needs Review:</span>
+        <strong id="stat-needs-review-count">-</strong>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <a href="/" class="btn-refresh" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: 6px;" title="Open Meridian Pay Customer Portal">
+        <span>💳</span> Customer Portal
+      </a>
+      <button class="btn-refresh" id="btn-refresh-all" title="Refresh trace list from Braintrust">
+        <span>🔄</span> Refresh
+      </button>
+      <div class="user-profile-badge" id="user-badge" title="Authenticated Braintrust Reviewer">
+        <div class="user-avatar" id="user-avatar">NT</div>
+        <span id="user-name-display">Nick Teodori</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Studio Split-Pane Layout -->
+  <main class="studio-layout">
+    <!-- Left Pane: Trace Navigator & Queue -->
+    <aside class="trace-navigator">
+      <div class="nav-controls">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="trace-search" class="search-input" placeholder="Search inquiries, accounts, tags...">
+        </div>
+
+        <div class="filter-tabs" role="tablist">
+          <button class="filter-tab active" data-assignee="me" id="tab-assignee-me">Assigned to Me</button>
+          <button class="filter-tab" data-assignee="unassigned" id="tab-assignee-unassigned">Unassigned</button>
+          <button class="filter-tab" data-assignee="all" id="tab-assignee-all">All Traces</button>
+        </div>
+
+        <div class="quick-filter-row">
+          <button class="chip-filter" data-status="all" id="chip-status-all">All Status</button>
+          <button class="chip-filter" data-status="failed" id="chip-status-failed">🚨 Failed Evals</button>
+          <button class="chip-filter" data-status="pending_review" id="chip-status-pending">⏳ Pending Review</button>
+          <button class="chip-filter" data-status="reviewed" id="chip-status-reviewed">✅ Reviewed</button>
+        </div>
+      </div>
+
+      <!-- Trace Cards Scrollable List -->
+      <div class="trace-list-container" id="trace-list">
+        <div class="inspector-empty" style="padding: 24px 12px;">
+          <span>Loading traces from Braintrust...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Pane: Trace Deep-Dive & Review Studio -->
+    <section class="trace-inspector" id="trace-inspector">
+      <div class="inspector-empty" id="inspector-empty-state">
+        <div class="inspector-empty-icon">🔍</div>
+        <h3>Select a Trace to Review</h3>
+        <p>Pick a trace from the left queue to inspect multi-turn conversation steps, LLM decisions, and system evaluations.</p>
+      </div>
+
+      <div class="inspector-content" id="inspector-content" style="display: none;">
+        <!-- Trace Header Card -->
+        <div class="inspector-header-card" id="trace-header-card">
+          <div class="header-title-row">
+            <div>
+              <h2 class="trace-title" id="trace-detail-title">Trace Review</h2>
+              <div class="trace-subtitle">
+                <span id="trace-detail-id">ID: -</span>
+                <span>•</span>
+                <span id="trace-detail-account">Account: -</span>
+                <span>•</span>
+                <span id="trace-detail-tier">Tier: Core</span>
+                <span>•</span>
+                <span id="trace-detail-time">-</span>
+              </div>
+            </div>
+            <div class="header-actions">
+              <button class="btn-assign" id="btn-assign-me" title="Assign this trace to Nick Teodori">
+                <span>👤</span> Assign to Me
+              </button>
+              <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary" id="btn-open-braintrust">
+                <span>↗</span> Open in Braintrust
+              </a>
+            </div>
+          </div>
+
+          <div class="header-tags-bar" id="trace-detail-tags">
+            <!-- Badges inserted dynamically -->
+          </div>
+        </div>
+
+        <!-- SECTION 1: System Evaluations (Obvious & Prominent) -->
+        <div class="section-evaluations">
+          <div class="section-title">
+            <span>📊</span> Automated System Evaluations & Guardrails
+          </div>
+
+          <!-- Diagnostic Warning Banner (if pattern or violation present) -->
+          <div id="eval-diagnostic-banner" style="display: none;"></div>
+
+          <!-- Evaluation Scorecards Grid -->
+          <div class="eval-cards-grid" id="eval-cards-grid">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+
+        <!-- SECTION 2: Multi-Turn Conversation & LLM Decisions Timeline -->
+        <div class="section-turns">
+          <div class="section-title">
+            <span>💬</span> Multi-Turn Conversation & LLM Decisions
+          </div>
+
+          <div class="turns-timeline" id="turns-timeline">
+            <!-- Filled dynamically with Turn 1, Turn 2, etc. -->
+          </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Reviewer Commentary Sidebar -->
+    <aside class="review-sidebar" id="review-sidebar">
+      <div class="review-sidebar-inner" id="review-sidebar-content" style="display: none;">
+        <div class="sidebar-header">
+          <div class="section-title">
+            <span>✍️</span> Reviewer Commentary
+          </div>
+          <p class="sidebar-subtitle">Record verdicts and review notes back to Braintrust.</p>
+        </div>
+
+        <form class="review-form" id="review-form" onsubmit="event.preventDefault();">
+          <!-- 1. Overall Review Verdict (human_review) -->
+          <div class="form-group">
+            <div class="criteria-name-row">
+              <label class="form-label" style="margin-bottom: 0;">Overall Review Verdict</label>
+              <span class="criteria-schema-tag">human_review</span>
+            </div>
+            <p class="criteria-desc" style="margin-top: 2px; margin-bottom: 8px;">
+              Primary human evaluation assessment against operational guidelines and financial runbooks.
+            </p>
+            <div class="verdict-buttons">
+              <button type="button" class="btn-verdict selected-pass" data-verdict="pass" id="verdict-pass" title="Pass (1.0) - Agent met all policy and operational criteria">
+                <span>✅</span> Pass
+              </button>
+              <button type="button" class="btn-verdict" data-verdict="escalate" id="verdict-escalate" title="Escalate (0.5) - Needs supervisor review or policy ambiguity">
+                <span>⚠️</span> Escalate
+              </button>
+              <button type="button" class="btn-verdict" data-verdict="fail" id="verdict-fail" title="Fail (0.0) - Violation or policy defect detected">
+                <span>❌</span> Fail
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Braintrust Human Review Criteria Rubric -->
+          <div class="form-group">
+            <div class="criteria-header-row">
+              <label class="form-label criteria-title">Braintrust Review Criteria</label>
+              <span class="criteria-summary-badge" id="criteria-summary-badge">7 / 7 Passing</span>
+            </div>
+            <p class="criteria-desc" style="margin-top: 2px; margin-bottom: 10px;">
+              Calibrated multi-criteria audit dimensions registered in Braintrust project settings.
+            </p>
+
+            <div class="criteria-group" id="criteria-group-container">
+              <!-- 1. Policy Compliance -->
+              <div class="criteria-item is-compliant" data-criteria="human_policy_compliance">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">🛡️ Policy Compliance &amp; Safety</span>
+                    <span class="criteria-schema-tag">human_policy_compliance</span>
+                  </div>
+                  <div class="criteria-desc">Adheres to financial transaction limits and strictly prevents unauthorized money movement or dispute overrides without required escalation.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Compliant</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Unauthorized Action</button>
+                </div>
+              </div>
+
+              <!-- 2. Date Accuracy -->
+              <div class="criteria-item is-compliant" data-criteria="human_date_accuracy">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">📅 Relative Date Accuracy</span>
+                    <span class="criteria-schema-tag">human_date_accuracy</span>
+                  </div>
+                  <div class="criteria-desc">Resolves relative time expressions (&quot;yesterday&quot;, &quot;last Friday&quot;) accurately to the transaction anchor date without off-by-one errors.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Correct Date</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Anchor Date Error</button>
+                </div>
+              </div>
+
+              <!-- 3. Contradiction Free -->
+              <div class="criteria-item is-compliant" data-criteria="human_contradiction_free">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">⚖️ Contradiction-Free Guidance</span>
+                    <span class="criteria-schema-tag">human_contradiction_free</span>
+                  </div>
+                  <div class="criteria-desc">Ensures guidance does not communicate conflicting policy rules or leave contradictory requirements unresolved for the customer.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Reconciled</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Unresolved Conflict</button>
+                </div>
+              </div>
+
+              <!-- 4. Escalation Appropriate -->
+              <div class="criteria-item is-compliant" data-criteria="human_escalation_appropriate">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">🚨 Escalation Appropriateness</span>
+                    <span class="criteria-schema-tag">human_escalation_appropriate</span>
+                  </div>
+                  <div class="criteria-desc">Escalates high-risk, ambiguous, or fraud-flagged cases to human tier-3 queues, while avoiding over-escalation of routine questions.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Appropriate Escalation</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Inappropriate Escalation</button>
+                </div>
+              </div>
+
+              <!-- 5. Citation Quality -->
+              <div class="criteria-item is-compliant" data-criteria="human_citation_quality">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">📖 Citation &amp; Runbook Quality</span>
+                    <span class="criteria-schema-tag">human_citation_quality</span>
+                  </div>
+                  <div class="criteria-desc">Citations match the inquiry domain, procedural runbook, and knowledge base guidelines without referencing irrelevant or wrong documents.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Relevant Runbook</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Irrelevant Citation</button>
+                </div>
+              </div>
+
+              <!-- 6. Tone and Conciseness -->
+              <div class="criteria-item is-compliant" data-criteria="human_tone_and_conciseness">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">💬 Tone &amp; Conciseness</span>
+                    <span class="criteria-schema-tag">human_tone_and_conciseness</span>
+                  </div>
+                  <div class="criteria-desc">Response is concise (10–150 words), professional, and free of circular friction or robotic repetitive disclaimer loops.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Professional &amp; Concise</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Curt or Verbose</button>
+                </div>
+              </div>
+
+              <!-- 7. Tool Execution Integrity -->
+              <div class="criteria-item is-compliant" data-criteria="human_tool_execution">
+                <div class="criteria-info">
+                  <div class="criteria-name-row">
+                    <span class="criteria-name">⚙️ Tool Execution Integrity</span>
+                    <span class="criteria-schema-tag">human_tool_execution</span>
+                  </div>
+                  <div class="criteria-desc">Tool invocations adhere to parameter schemas, expected argument types, and permitted entity identifiers.</div>
+                </div>
+                <div class="criteria-toggles">
+                  <button type="button" class="btn-criteria-toggle active-pass" data-value="1.0">✅ Valid Parameters</button>
+                  <button type="button" class="btn-criteria-toggle" data-value="0.0">❌ Malformed Arguments</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Failure Taxonomy Category -->
+          <div class="form-group">
+            <label class="form-label" for="select-failure-category">Failure Taxonomy Category</label>
+            <p class="criteria-desc" style="margin-top: -4px; margin-bottom: 6px;">
+              Taxonomy classification for root cause tagging and tracking in Braintrust datasets.
+            </p>
+            <select id="select-failure-category" class="form-select">
+              <option value="none">None / Passed Adherence</option>
+              <option value="relative_date_resolution">Relative Date Resolution (Off-by-one / Anchor)</option>
+              <option value="policy_drift_under_pressure">Policy Drift Under Pressure (Unauthorized Override)</option>
+              <option value="missing_escalation_money_moving">Missing Escalation (Unauthorized Money Movement)</option>
+              <option value="circular_friction">Circular Friction (Repeated Canned Refusals)</option>
+              <option value="context_loss">Context / Memory Loss</option>
+              <option value="citation_to_wrong_doc">Citation to Wrong Runbook / Policy Doc</option>
+              <option value="tool_arg_malformed">Tool Argument Malformed / Schema Breach</option>
+              <option value="tone_or_length">Tone or Length Non-Compliance</option>
+              <option value="hallucinated_policy">Hallucinated Policy / Timelines</option>
+              <option value="unauthorized_refund">Unauthorized Concession / Refund</option>
+            </select>
+          </div>
+
+          <!-- 4. Reviewer Commentary -->
+          <div class="form-group">
+            <div class="criteria-name-row">
+              <label class="form-label" for="review-comment-input" style="margin-bottom: 0;">Reviewer Commentary &amp; Notes</label>
+              <span class="criteria-schema-tag">human_critique_notes</span>
+            </div>
+            <p class="criteria-desc" style="margin-top: 2px; margin-bottom: 6px;">
+              Free-form handwritten critique and notes synced back into Braintrust feedback.
+            </p>
+            <textarea
+              id="review-comment-input"
+              class="form-textarea"
+              placeholder="Enter detailed review commentary explaining LLM behavior, adherence or specific failure mode..."
+              required
+            ></textarea>
+          </div>
+
+          <button type="button" class="btn-submit-review" id="btn-submit-review">
+            <span>🚀</span> Submit Review to Braintrust
+          </button>
+        </form>
+      </div>
+
+      <div class="sidebar-empty" id="review-sidebar-empty">
+        <div style="font-size: 2rem; opacity: 0.5; margin-bottom: 8px;">📝</div>
+        <p>Select a trace to input review commentary</p>
+      </div>
+    </aside>
+
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
